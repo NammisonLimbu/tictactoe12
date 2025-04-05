@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌟 Ultimate Tic Tac Toe 🌟</title>
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
+            --x-color: #e84393;
+            --o-color: #0984e3;
+            --win-color: #00b894;
+            --draw-color: #fdcb6e;
+            --bg-color: #f8f9fa;
+            --text-dark: #2d3436;
+            --text-light: #f8f9fa;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            flex-direction: column;
+            padding: 20px;
+            color: var(--text-dark);
+        }
+
+        .container {
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: var(--primary);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .mode-selector {
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .btn-mode {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-mode:hover {
+            background: var(--secondary);
+            transform: scale(1.05);
+        }
+
+        .btn-reset {
+            background: var(--primary);
+            color: white;
+            margin-top: 20px;
+        }
+
+        .btn-reset:hover {
+            background: var(--secondary);
+            transform: scale(1.05);
+        }
+
+        .player-input {
+            margin: 20px 0;
+            display: none;
+        }
+
+        .player-input input {
+            padding: 10px;
+            margin: 5px;
+            border: 2px solid var(--secondary);
+            border-radius: 50px;
+            width: 200px;
+            text-align: center;
+            font-size: 1rem;
+        }
+
+        .player-input button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .player-input button:hover {
+            background: var(--secondary);
+            transform: scale(1.05);
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 20px auto;
+            max-width: 300px;
+            display: none;
+        }
+
+        .cell {
+            width: 90px;
+            height: 90px;
+            background: white;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+        }
+
+        .cell:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .cell.x {
+            color: var(--x-color);
+        }
+
+        .cell.o {
+            color: var(--o-color);
+        }
+
+        .status {
+            font-size: 1.5rem;
+            margin: 20px 0;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .win-animation {
+            animation: celebrate 1s ease infinite;
+        }
+
+        @keyframes celebrate {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: var(--win-color);
+            opacity: 0;
+            animation: confetti-fall 3s ease-out forwards;
+        }
+
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌟 Ultimate Tic Tac Toe 🌟</h1>
+        
+        <div class="mode-selector">
+            <h3>Choose Game Mode:</h3>
+            <button class="btn btn-mode" id="singlePlayer">🤖 vs Computer</button>
+            <button class="btn btn-mode" id="twoPlayers">👥 2 Players</button>
+        </div>
+
+        <div class="player-input" id="playerInput">
+            <input type="text" id="player1" placeholder="Player 1 (X)" maxlength="10">
+            <input type="text" id="player2" placeholder="Player 2 (O)" maxlength="10" style="display: none;">
+            <button id="startGame">Start Game</button>
+        </div>
+
+        <div class="status" id="status"></div>
+        <div class="board" id="board"></div>
+        <button class="btn btn-reset" id="reset" style="display: none;">Play Again</button>
+    </div>
+
+    <script>
+        // DOM Elements
+        const singlePlayerBtn = document.getElementById('singlePlayer');
+        const twoPlayersBtn = document.getElementById('twoPlayers');
+        const playerInput = document.getElementById('playerInput');
+        const player1Input = document.getElementById('player1');
+        const player2Input = document.getElementById('player2');
+        const startGameBtn = document.getElementById('startGame');
+        const statusDisplay = document.getElementById('status');
+        const board = document.getElementById('board');
+        const resetBtn = document.getElementById('reset');
+
+        // Game Variables
+        let currentPlayer = 'X';
+        let gameState = ['', '', '', '', '', '', '', '', ''];
+        let gameActive = false;
+        let vsComputer = false;
+        let player1Name = '';
+        let player2Name = '';
+
+        // Winning Conditions
+        const winningConditions = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+            [0, 4, 8], [2, 4, 6]             // Diagonals
+        ];
+
+        // Initialize Board
+        function initializeBoard() {
+            board.innerHTML = '';
+            for (let i = 0; i < 9; i++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.setAttribute('data-index', i);
+                cell.addEventListener('click', handleCellClick);
+                board.appendChild(cell);
+            }
+            board.style.display = 'grid';
+        }
+
+        // Handle Cell Click
+        function handleCellClick(e) {
+            if (!gameActive) return;
+
+            const clickedCell = e.target;
+            const clickedCellIndex = parseInt(clickedCell.getAttribute('data-index'));
+
+            if (gameState[clickedCellIndex] !== '') return;
+
+            gameState[clickedCellIndex] = currentPlayer;
+            clickedCell.textContent = currentPlayer;
+            clickedCell.classList.add(currentPlayer.toLowerCase());
+
+            checkResult();
+
+            if (gameActive && vsComputer && currentPlayer === 'O') {
+                setTimeout(computerMove, 500);
+            }
+        }
+
+        // Computer Move (Simple AI)
+        function computerMove() {
+            if (!gameActive) return;
+
+            // Try to win first
+            for (let i = 0; i < winningConditions.length; i++) {
+                const [a, b, c] = winningConditions[i];
+                if (gameState[a] === 'O' && gameState[b] === 'O' && gameState[c] === '') {
+                    makeMove(c);
+                    return;
+                }
+                if (gameState[a] === 'O' && gameState[c] === 'O' && gameState[b] === '') {
+                    makeMove(b);
+                    return;
+                }
+                if (gameState[b] === 'O' && gameState[c] === 'O' && gameState[a] === '') {
+                    makeMove(a);
+                    return;
+                }
+            }
+
+            // Block player from winning
+            for (let i = 0; i < winningConditions.length; i++) {
+                const [a, b, c] = winningConditions[i];
+                if (gameState[a] === 'X' && gameState[b] === 'X' && gameState[c] === '') {
+                    makeMove(c);
+                    return;
+                }
+                if (gameState[a] === 'X' && gameState[c] === 'X' && gameState[b] === '') {
+                    makeMove(b);
+                    return;
+                }
+                if (gameState[b] === 'X' && gameState[c] === 'X' && gameState[a] === '') {
+                    makeMove(a);
+                    return;
+                }
+            }
+
+            // Take center if available
+            if (gameState[4] === '') {
+                makeMove(4);
+                return;
+            }
+
+            // Random move
+            const emptyCells = gameState.reduce((acc, cell, index) => {
+                if (cell === '') acc.push(index);
+                return acc;
+            }, []);
+
+            if (emptyCells.length > 0) {
+                const randomIndex = Math.floor(Math.random() * emptyCells.length);
+                makeMove(emptyCells[randomIndex]);
+            }
+        }
+
+        function makeMove(index) {
+            gameState[index] = 'O';
+            const cells = document.querySelectorAll('.cell');
+            cells[index].textContent = 'O';
+            cells[index].classList.add('o');
+            checkResult();
+        }
+
+        // Check Game Result
+        function checkResult() {
+            let roundWon = false;
+
+            for (let i = 0; i < winningConditions.length; i++) {
+                const [a, b, c] = winningConditions[i];
+                if (gameState[a] === '' || gameState[b] === '' || gameState[c] === '') continue;
+
+                if (gameState[a] === gameState[b] && gameState[b] === gameState[c]) {
+                    roundWon = true;
+                    highlightWinningCells([a, b, c]);
+                    break;
+                }
+            }
+
+            if (roundWon) {
+                const winner = currentPlayer === 'X' ? player1Name : (vsComputer ? 'Computer' : player2Name);
+                statusDisplay.textContent = `🎉 ${winner} wins! 🎉`;
+                gameActive = false;
+                resetBtn.style.display = 'block';
+                createConfetti();
+                return;
+            }
+
+            if (!gameState.includes('')) {
+                statusDisplay.textContent = "😲 It's a draw! 😲";
+                gameActive = false;
+                resetBtn.style.display = 'block';
+                return;
+            }
+
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            updateStatus();
+        }
+
+        // Highlight Winning Cells
+        function highlightWinningCells(cells) {
+            cells.forEach(index => {
+                const cell = document.querySelector(`.cell[data-index="${index}"]`);
+                cell.classList.add('win-animation');
+            });
+        }
+
+        // Update Status Display
+        function updateStatus() {
+            if (currentPlayer === 'X') {
+                statusDisplay.textContent = `${player1Name}'s turn (X)`;
+            } else {
+                statusDisplay.textContent = vsComputer ? "Computer's turn (O)" : `${player2Name}'s turn (O)`;
+            }
+        }
+
+        // Create Confetti Effect
+        function createConfetti() {
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti');
+                confetti.style.left = `${Math.random() * 100}vw`;
+                confetti.style.backgroundColor = getRandomColor();
+                confetti.style.animationDelay = `${Math.random() * 2}s`;
+                document.body.appendChild(confetti);
+                setTimeout(() => confetti.remove(), 3000);
+            }
+        }
+
+        function getRandomColor() {
+            const colors = ['#e84393', '#0984e3', '#00b894', '#fdcb6e', '#6c5ce7'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        // Reset Game
+        function resetGame() {
+            currentPlayer = 'X';
+            gameState = ['', '', '', '', '', '', '', '', ''];
+            gameActive = true;
+            statusDisplay.textContent = `${player1Name}'s turn (X)`;
+            resetBtn.style.display = 'none';
+
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => {
+                cell.textContent = '';
+                cell.className = 'cell';
+                cell.addEventListener('click', handleCellClick);
+            });
+
+            if (vsComputer && currentPlayer === 'O') {
+                setTimeout(computerMove, 500);
+            }
+        }
+
+        // Event Listeners
+        singlePlayerBtn.addEventListener('click', () => {
+            vsComputer = true;
+            playerInput.style.display = 'block';
+            player2Input.style.display = 'none';
+            player2Input.value = 'Computer';
+            player2Name = 'Computer';
+        });
+
+        twoPlayersBtn.addEventListener('click', () => {
+            vsComputer = false;
+            playerInput.style.display = 'block';
+            player2Input.style.display = 'block';
+            player2Input.value = '';
+            player2Name = '';
+        });
+
+        startGameBtn.addEventListener('click', () => {
+            player1Name = player1Input.value || 'Player 1';
+            if (!vsComputer) player2Name = player2Input.value || 'Player 2';
+            
+            playerInput.style.display = 'none';
+            initializeBoard();
+            gameActive = true;
+            updateStatus();
+        });
+
+        resetBtn.addEventListener('click', resetGame);
+    </script>
+</body>
+</html>
